@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluetooth Chat Simulation 🔵</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom scrollbar for better aesthetics */
+        #log::-webkit-scrollbar {
+            width: 8px;
+        }
+        #log::-webkit-scrollbar-track {
+            background: #2d3748; /* bg-gray-800 */
+            border-radius: 10px;
+        }
+        #log::-webkit-scrollbar-thumb {
+            background: #4a5568; /* bg-gray-700 */
+            border-radius: 10px;
+        }
+        #log::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0; /* bg-gray-400 */
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-900 text-white flex items-center justify-center min-h-screen p-4">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-lg flex flex-col space-y-4">
+        <h2 class="text-2xl font-bold text-center mb-4">Bluetooth Chat Simulation 🔵</h2>
+
+        <!-- Username Input -->
+        <div class="flex flex-col space-y-2">
+            <label for="username" class="text-sm text-gray-400">اسم المستخدم (User Name):</label>
+            <input
+                id="username"
+                type="text"
+                placeholder="أدخل اسمك"
+                value="مجهول"
+                class="p-3 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            >
+        </div>
+
+        <!-- Participants List -->
+        <div class="bg-gray-700 p-3 rounded-lg border border-gray-600">
+            <p class="text-sm text-gray-400 mb-2">المشاركون النشطون (Active Participants):</p>
+            <div id="participantsList" class="flex flex-wrap gap-2 text-sm">
+                <!-- Participant names will be added here -->
+            </div>
+        </div>
+
+        <!-- Chat Log -->
+        <div
+            id="log"
+            class="border border-gray-700 h-80 overflow-y-auto p-4 rounded-lg bg-gray-700 text-sm flex flex-col space-y-2"
+        >
+            <!-- Messages will be appended here -->
+        </div>
+
+        <!-- Message Input and Send Button -->
+        <div class="flex space-x-2">
+            <input
+                id="msg"
+                type="text"
+                placeholder="أدخل رسالة"
+                class="flex-grow p-3 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+            >
+            <button
+                onclick="send()"
+                class="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                إرسال (Send)
+            </button>
+        </div>
+
+        <!-- AI Powered Features -->
+        <div class="flex justify-around mt-4 space-x-2 flex-wrap gap-2">
+            <button
+                onclick="summarizeChat()"
+                id="summarizeBtn"
+                class="flex-grow px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                تلخيص المحادثة ✨
+            </button>
+            <button
+                onclick="magicReply()"
+                id="replyBtn"
+                class="flex-grow px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                رد سحري ✨
+            </button>
+            <button
+                onclick="translateLastMessage()"
+                id="translateBtn"
+                class="flex-grow px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                ترجمة آخر رسالة ✨
+            </button>
+            <button
+                onclick="analyzeSentiment()"
+                id="sentimentBtn"
+                class="flex-grow px-4 py-2 bg-pink-600 text-white font-semibold rounded-lg shadow-md hover:bg-pink-700 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                تحليل المشاعر ✨
+            </button>
+            <button
+                onclick="elaborateMessage()"
+                id="elaborateBtn"
+                class="flex-grow px-4 py-2 bg-blue-800 text-white font-semibold rounded-lg shadow-md hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                توسيع الرسالة ✨
+            </button>
+            <button
+                onclick="generateQuestion()"
+                id="questionBtn"
+                class="flex-grow px-4 py-2 bg-cyan-600 text-white font-semibold rounded-lg shadow-md hover:bg-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                اقتراح سؤال ✨
+            </button>
+            <button
+                onclick="suggestTopic()"
+                id="topicBtn"
+                class="flex-grow px-4 py-2 bg-lime-600 text-white font-semibold rounded-lg shadow-md hover:bg-lime-700 focus:outline-none focus:ring-2 focus:ring-lime-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                اقتراح موضوع ✨
+            </button>
+        </div>
+
+        <!-- Simulated Call and File Sharing Features -->
+        <div class="flex justify-around mt-4 space-x-2 flex-wrap gap-2">
+            <button
+                onclick="openVideoWindow()"
+                class="flex-grow px-4 py-2 bg-orange-600 text-white font-semibold rounded-lg shadow-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                فتح نافذة الفيديو 📺 (محاكاة)
+            </button>
+            <button
+                onclick="startVideoCall()"
+                class="flex-grow px-4 py-2 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                مكالمة فيديو 🎥 (محاكاة)
+            </button>
+            <button
+                onclick="startVoiceCall()"
+                class="flex-grow px-4 py-2 bg-yellow-600 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                مكالمة صوتية 🎤 (محاكاة)
+            </button>
+            <input type="file" id="fileInput" class="hidden" onchange="handleFileSelect(event)">
+            <button
+                onclick="triggerFileInput()"
+                class="flex-grow px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition-colors duration-200"
+            >
+                مشاركة ملف 📁 (محاكاة)
+            </button>
+        </div>
+
+        <!-- AI Response Display Area -->
+        <div id="aiResponse" class="mt-4 p-4 bg-gray-700 rounded-lg hidden">
+            <p class="text-gray-300 mb-2">استجابة الذكاء الاصطناعي:</p>
+            <p id="aiContent" class="text-white text-sm"></p>
+        </div>
+        <div id="aiLoading" class="hidden text-center text-gray-400">جاري المعالجة...</div>
+
+    </div>
+
+    <!-- Simulated Video Window (Modal) -->
+    <div id="videoModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-11/12 max-w-2xl h-3/4 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold">نافذة الفيديو المباشر (محاكاة)</h3>
+                <button
+                    onclick="closeVideoWindow()"
+                    class="text-gray-400 hover:text-white text-2xl font-bold"
+                >
+                    &times;
+                </button>
+            </div>
+            <div class="flex-grow bg-gray-700 rounded-lg flex items-center justify-center text-gray-400 text-lg">
+                <p>هنا ستظهر نافذة الفيديو الخاصة بك.<br> هذه محاكاة فقط وليست بثًا حقيقيًا.</p>
+            </div>
+            <div class="mt-4 text-center">
+                <button
+                    onclick="closeVideoWindow()"
+                    class="px-6 py-3 bg-red-600 text-white font-semibold rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-75 transition-colors duration-200"
+                >
+                    إغلاق نافذة الفيديو
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Channel for communication between all windows (Bluetooth simulation)
+        const channel = new BroadcastChannel("bluetooth-mesh");
+        const log = document.getElementById("log");
+        const usernameInput = document.getElementById("username");
+        const msgInput = document.getElementById("msg");
+        const aiResponseDiv = document.getElementById("aiResponse");
+        const aiContent = document.getElementById("aiContent");
+        const aiLoading = document.getElementById("aiLoading");
+        const summarizeBtn = document.getElementById('summarizeBtn');
+        const replyBtn = document.getElementById('replyBtn');
+        const translateBtn = document.getElementById('translateBtn');
+        const sentimentBtn = document.getElementById('sentimentBtn');
+        const elaborateBtn = document.getElementById('elaborateBtn');
+        const questionBtn = document.getElementById('questionBtn'); // New button
+        const topicBtn = document.getElementById('topicBtn'); // New button
+        const fileInput = document.getElementById('fileInput');
+        const videoModal = document.getElementById('videoModal');
+        const participantsListDiv = document.getElementById('participantsList');
+
+        // Stores unique IDs of active participants
+        const activeParticipants = new Map(); // Map<uuid, username>
+        const myUUID = crypto.randomUUID(); // Unique ID for this browser tab/window
+
+        // Store chat history for AI features
+        let chatHistory = [];
+        const MAX_CHAT_HISTORY_FOR_AI = 10; // Limit chat history for AI context
+
+        /**
+         * Updates the displayed list of active participants.
+         */
+        function updateParticipantsList() {
+            participantsListDiv.innerHTML = ''; // Clear current list
+            activeParticipants.forEach((username, uuid) => {
+                const participantSpan = document.createElement('span');
+                participantSpan.classList.add('bg-gray-600', 'text-gray-200', 'px-3', 'py-1', 'rounded-full', 'text-xs');
+                participantSpan.textContent = `${username}${uuid === myUUID ? ' (أنت)' : ''}`;
+                participantsListDiv.appendChild(participantSpan);
+            });
+        }
+
+        /**
+         * Appends a message or event to the chat log and updates chat history.
+         * @param {string} content - The message content or event description.
+         * @param {string} sender - The sender's name.
+         * @param {string} type - 'sent_chat', 'received_chat', 'sent_call_event', 'received_call_event', 'sent_file_event', 'received_file_event', 'sent_video_window_event', 'received_video_window_event', 'system_message'.
+         */
+        function append(content, sender, type) {
+            const time = new Date().toLocaleTimeString('ar-EG', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }); // Get current time in Arabic format
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('flex', 'flex-col', 'max-w-[80%]', 'p-2', 'rounded-lg', 'break-words');
+
+            let senderText = sender;
+            let timeColor = 'text-gray-200';
+            let messageBg = '';
+
+            // Determine styling based on message type
+            if (type.startsWith('sent_')) {
+                messageDiv.classList.add('self-end');
+                senderText = `(أنت) ${sender}`;
+                messageBg = 'bg-blue-500';
+            } else if (type.startsWith('received_')) {
+                messageDiv.classList.add('self-start');
+                messageBg = 'bg-gray-600';
+                timeColor = 'text-gray-400';
+            } else if (type === 'system_message') {
+                messageDiv.classList.add('self-center', 'text-center', 'text-gray-400', 'italic', 'text-sm');
+                messageBg = 'bg-gray-700'; // System messages are centered and distinct
+                senderText = ''; // No sender for system messages
+                timeColor = 'text-gray-500';
+            }
+
+            messageDiv.classList.add(messageBg, 'text-white');
+
+            // Handle different content types
+            let displayContent = content;
+            if (type === 'sent_call_event') {
+                displayContent = `لقد بدأت ${content}.`;
+            } else if (type === 'received_call_event') {
+                displayContent = `${sender} بدأ ${content}.`;
+            } else if (type === 'sent_file_event') {
+                displayContent = `لقد شاركت ملف: ${content}`;
+            } else if (type === 'received_file_event') {
+                displayContent = `${sender} شارك ملف: ${content}`;
+            } else if (type === 'sent_video_window_event') {
+                displayContent = `لقد ${content} نافذة الفيديو.`;
+            } else if (type === 'received_video_window_event') {
+                displayContent = `${sender} ${content} نافذة الفيديو.`;
+            }
+
+            messageDiv.innerHTML = `
+                <div class="text-xs ${type.startsWith('sent_') ? 'text-right' : (type === 'system_message' ? 'text-center' : 'text-left')} mb-1">${senderText} <span class="${timeColor}">${time}</span></div>
+                <div>${displayContent}</div>
+            `;
+
+            log.appendChild(messageDiv);
+            log.scrollTop = log.scrollHeight; // Scroll to the bottom
+
+            // Add chat messages to history for AI features (excluding system messages, calls, files, video window events)
+            if (type === 'sent_chat' || type === 'received_chat') {
+                chatHistory.push({ sender, message: content, type });
+                if (chatHistory.length > MAX_CHAT_HISTORY_FOR_AI) {
+                    chatHistory.shift(); // Keep history to the last N messages
+                }
+            }
+        }
+
+        // Event listener for receiving messages
+        channel.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            const currentUsername = usernameInput.value.trim() || 'مجهول';
+
+            // Handle participant join/leave messages
+            if (data.type === 'participant_join') {
+                activeParticipants.set(data.uuid, data.sender);
+                updateParticipantsList();
+                if (data.uuid !== myUUID) {
+                    append(`${data.sender} انضم إلى الدردشة.`, '', 'system_message');
+                }
+                // When a new participant joins, send them your own presence info
+                channel.postMessage(JSON.stringify({
+                    type: 'participant_info',
+                    uuid: myUUID,
+                    sender: currentUsername,
+                    timestamp: new Date().toISOString()
+                }));
+            } else if (data.type === 'participant_leave') {
+                activeParticipants.delete(data.uuid);
+                updateParticipantsList();
+                append(`${data.sender} غادر الدردشة.`, '', 'system_message');
+            } else if (data.type === 'participant_info') {
+                // This is a direct response to a 'participant_join_request' or from a new joiner
+                activeParticipants.set(data.uuid, data.sender);
+                updateParticipantsList();
+            } else if (data.uuid !== myUUID) { // Only process messages not sent by this window
+                let appendType;
+                switch (data.type) {
+                    case 'chat':
+                        appendType = 'received_chat';
+                        break;
+                    case 'video_call_start':
+                        appendType = 'received_call_event';
+                        data.message = 'مكالمة فيديو';
+                        break;
+                    case 'voice_call_start':
+                        appendType = 'received_call_event';
+                        data.message = 'مكالمة صوتية';
+                        break;
+                    case 'file_share':
+                        appendType = 'received_file_event';
+                        break;
+                    case 'video_window_open':
+                        appendType = 'received_video_window_event';
+                        data.message = 'فتح';
+                        break;
+                    case 'video_window_close':
+                        appendType = 'received_video_window_event';
+                        data.message = 'إغلاق';
+                        break;
+                    case 'system_broadcast': // Example of explicit broadcast
+                        appendType = 'system_message';
+                        break;
+                    default:
+                        appendType = 'received_chat'; // Fallback
+                }
+                append(data.message, data.sender, appendType);
+            }
+        };
+
+        // Function to send the message
+        function send() {
+            const msg = msgInput.value;
+            const username = usernameInput.value.trim() || 'مجهول'; // Default to 'مجهول' if no username
+            if (msg.trim()) {
+                // Display message in this window
+                append(msg, username, 'sent_chat');
+
+                // Send message to other windows
+                channel.postMessage(JSON.stringify({
+                    type: 'chat',
+                    message: msg,
+                    sender: username,
+                    uuid: myUUID, // Include sender's unique ID
+                    timestamp: new Date().toISOString()
+                }));
+
+                msgInput.value = ""; // Clear the input field
+                hideAIResponse(); // Hide AI response when a new message is sent
+            }
+        }
+
+        // --- Simulated Call, File Sharing, and Video Window Functions ---
+
+        /**
+         * Opens the simulated video window and sends a broadcast.
+         */
+        function openVideoWindow() {
+            const username = usernameInput.value.trim() || 'مجهول';
+            videoModal.classList.remove('hidden');
+            append('فتح', username, 'sent_video_window_event');
+            channel.postMessage(JSON.stringify({
+                type: 'video_window_open',
+                message: 'فتح نافذة الفيديو',
+                sender: username,
+                uuid: myUUID,
+                timestamp: new Date().toISOString()
+            }));
+            hideAIResponse();
+        }
+
+        /**
+         * Closes the simulated video window and sends a broadcast.
+         */
+        function closeVideoWindow() {
+            const username = usernameInput.value.trim() || 'مجهول';
+            videoModal.classList.add('hidden');
+            append('إغلاق', username, 'sent_video_window_event');
+            channel.postMessage(JSON.stringify({
+                type: 'video_window_close',
+                message: 'إغلاق نافذة الفيديو',
+                sender: username,
+                uuid: myUUID,
+                timestamp: new Date().toISOString()
+            }));
+            hideAIResponse();
+        }
+
+        /**
+         * Simulates starting a video call.
+         */
+        function startVideoCall() {
+            const username = usernameInput.value.trim() || 'مجهول';
+            append('مكالمة فيديو', username, 'sent_call_event');
+            channel.postMessage(JSON.stringify({
+                type: 'video_call_start',
+                message: 'مكالمة فيديو',
+                sender: username,
+                uuid: myUUID,
+                timestamp: new Date().toISOString()
+            }));
+            hideAIResponse();
+        }
+
+        /**
+         * Simulates starting a voice call.
+         */
+        function startVoiceCall() {
+            const username = usernameInput.value.trim() || 'مجهول';
+            append('مكالمة صوتية', username, 'sent_call_event');
+            channel.postMessage(JSON.stringify({
+                type: 'voice_call_start',
+                message: 'مكالمة صوتية',
+                sender: username,
+                uuid: myUUID,
+                timestamp: new Date().toISOString()
+            }));
+            hideAIResponse();
+        }
+
+        /**
+         * Triggers the hidden file input click.
+         */
+        function triggerFileInput() {
+            fileInput.click();
+        }
+
+        /**
+         * Handles the file selection and simulates sharing the file.
+         * @param {Event} event - The change event from the file input.
+         */
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const username = usernameInput.value.trim() || 'مجهول';
+                append(file.name, username, 'sent_file_event');
+                channel.postMessage(JSON.stringify({
+                    type: 'file_share',
+                    message: file.name, // Only send the file name for simulation
+                    sender: username,
+                    uuid: myUUID,
+                    timestamp: new Date().toISOString()
+                }));
+                hideAIResponse();
+                fileInput.value = ''; // Reset file input to allow selecting the same file again
+            }
+        }
+
+
+        // --- Gemini API Integration ---
+
+        /**
+         * Generic function to call Gemini API with exponential backoff.
+         * @param {Array} contents - The content array for the API payload.
+         * @param {Object} generationConfig - Optional generation config for structured responses.
+         * @param {number} retries - Number of retries so far.
+         * @returns {Promise<string>} - The generated text response.
+         */
+        async function callGeminiAPI(contents, generationConfig = {}, retries = 0) {
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+            const payload = { contents, generationConfig };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    if (response.status === 429 && retries < 5) { // Too Many Requests
+                        const delay = Math.pow(2, retries) * 1000; // Exponential backoff
+                        await new Promise(res => setTimeout(res, delay));
+                        return callGeminiAPI(contents, generationConfig, retries + 1);
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    return result.candidates[0].content.parts[0].text;
+                } else {
+                    throw new Error("No content received from Gemini API.");
+                }
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                throw error; // Re-throw to be caught by the calling function
+            }
+        }
+
+        /**
+         * Displays the AI response.
+         * @param {string} text - The text to display.
+         */
+        function showAIResponse(text) {
+            aiContent.textContent = text;
+            aiResponseDiv.classList.remove('hidden');
+        }
+
+        /**
+         * Hides the AI response area.
+         */
+        function hideAIResponse() {
+            aiResponseDiv.classList.add('hidden');
+            aiContent.textContent = '';
+        }
+
+        /**
+         * Shows the loading indicator.
+         */
+        function showLoading() {
+            aiLoading.classList.remove('hidden');
+            summarizeBtn.disabled = true;
+            replyBtn.disabled = true;
+            translateBtn.disabled = true;
+            sentimentBtn.disabled = true;
+            elaborateBtn.disabled = true;
+            questionBtn.disabled = true; // Disable new button
+            topicBtn.disabled = true; // Disable new button
+        }
+
+        /**
+         * Hides the loading indicator.
+         */
+        function hideLoading() {
+            aiLoading.classList.add('hidden');
+            summarizeBtn.disabled = false;
+            replyBtn.disabled = false;
+            translateBtn.disabled = false;
+            sentimentBtn.disabled = false;
+            elaborateBtn.disabled = false;
+            questionBtn.disabled = false; // Enable new button
+            topicBtn.disabled = false; // Enable new button
+        }
+
+        /**
+         * Summarizes the chat history using Gemini API.
+         */
+        async function summarizeChat() {
+            if (chatHistory.length === 0) {
+                showAIResponse("لا توجد رسائل لتلخيصها.");
+                return;
+            }
+
+            showLoading();
+            hideAIResponse();
+
+            const chatText = chatHistory.filter(m => m.type === 'sent_chat' || m.type === 'received_chat').map(m => `${m.sender}: ${m.message}`).join('\n');
+            const prompt = `الرجاء تلخيص المحادثة التالية في جملة أو جملتين: \n\n${chatText}`;
+
+            try {
+                const summary = await callGeminiAPI([{ role: "user", parts: [{ text: prompt }] }]);
+                showAIResponse(`**ملخص المحادثة:** ${summary}`);
+            } catch (error) {
+                showAIResponse("حدث خطأ أثناء تلخيص المحادثة. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Generates a magic reply based on the last message using Gemini API.
+         */
+        async function magicReply() {
+            // Filter out non-chat messages for AI context
+            const actualChatMessages = chatHistory.filter(m => m.type === 'sent_chat' || m.type === 'received_chat');
+            if (actualChatMessages.length === 0) {
+                showAIResponse("لا توجد رسائل للرد عليها.");
+                return;
+            }
+
+            showLoading();
+            hideAIResponse();
+
+            const lastMessage = actualChatMessages[actualChatMessages.length - 1];
+            const prompt = `اقترح رداً قصيراً وودياً على الرسالة التالية: "${lastMessage.sender}: ${lastMessage.message}"`;
+
+            try {
+                const reply = await callGeminiAPI([{ role: "user", parts: [{ text: prompt }] }]);
+                showAIResponse(`**اقتراح الرد:** ${reply}`);
+            } catch (error) {
+                showAIResponse("حدث خطأ أثناء إنشاء الرد السحري. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Translates the last message in the chat history using Gemini API.
+         */
+        async function translateLastMessage() {
+            // Filter out non-chat messages for AI context
+            const actualChatMessages = chatHistory.filter(m => m.type === 'sent_chat' || m.type === 'received_chat');
+            if (actualChatMessages.length === 0) {
+                showAIResponse("لا توجد رسائل لترجمتها.");
+                return;
+            }
+
+            showLoading();
+            hideAIResponse();
+
+            const lastMessage = actualChatMessages[actualChatMessages.length - 1];
+            const prompt = `ترجم الرسالة التالية إلى الإنجليزية: "${lastMessage.message}"`;
+
+            try {
+                const translatedText = await callGeminiAPI([{ role: "user", parts: [{ text: prompt }] }]);
+                showAIResponse(`**الترجمة إلى الإنجليزية (${lastMessage.sender}):** ${translatedText}`);
+            } catch (error) {
+                showAIResponse("حدث خطأ أثناء الترجمة. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Analyzes the sentiment of the last message using Gemini API.
+         */
+        async function analyzeSentiment() {
+            const actualChatMessages = chatHistory.filter(m => m.type === 'sent_chat' || m.type === 'received_chat');
+            if (actualChatMessages.length === 0) {
+                showAIResponse("لا توجد رسائل لتحليل مشاعرها.");
+                return;
+            }
+
+            showLoading();
+            hideAIResponse();
+
+            const lastMessage = actualChatMessages[actualChatMessages.length - 1];
+            const prompt = `حلل المشاعر في الرسالة التالية (إيجابية، سلبية، محايدة): "${lastMessage.message}"`;
+
+            try {
+                const sentiment = await callGeminiAPI([{ role: "user", parts: [{ text: prompt }] }]);
+                showAIResponse(`**تحليل المشاعر (${lastMessage.sender}):** ${sentiment}`);
+            } catch (error) {
+                showAIResponse("حدث خطأ أثناء تحليل المشاعر. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Elaborates on the last message using Gemini API.
+         */
+        async function elaborateMessage() {
+            const actualChatMessages = chatHistory.filter(m => m.type === 'sent_chat' || m.type === 'received_chat');
+            if (actualChatMessages.length === 0) {
+                showAIResponse("لا توجد رسائل للتوسع فيها.");
+                return;
+            }
+
+            showLoading();
+            hideAIResponse();
+
+            const lastMessage = actualChatMessages[actualChatMessages.length - 1];
+            const prompt = `الرجاء توسيع الرسالة التالية وتقديم مزيد من التفاصيل أو السياق حولها: "${lastMessage.message}"`;
+
+            try {
+                const elaboration = await callGeminiAPI([{ role: "user", parts: [{ text: prompt }] }]);
+                showAIResponse(`**توسيع الرسالة (${lastMessage.sender}):** ${elaboration}`);
+            } catch (error) {
+                showAIResponse("حدث خطأ أثناء توسيع الرسالة. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Generates a follow-up question based on the last few chat messages.
+         */
+        async function generateQuestion() {
+            const actualChatMessages = chatHistory.filter(m => m.type === 'sent_chat' || m.type === 'received_chat');
+            if (actualChatMessages.length === 0) {
+                showAIResponse("لا توجد رسائل لاقتراح سؤال بناءً عليها.");
+                return;
+            }
+
+            showLoading();
+            hideAIResponse();
+
+            const recentChat = actualChatMessages.slice(-5).map(m => `${m.sender}: ${m.message}`).join('\n'); // Use last 5 messages for context
+            const prompt = `بناءً على المحادثة التالية، اقترح سؤالًا واحدًا مفتوحًا يمكن أن يواصل الدردشة: \n\n${recentChat}`;
+
+            try {
+                const question = await callGeminiAPI([{ role: "user", parts: [{ text: prompt }] }]);
+                showAIResponse(`**سؤال مقترح:** ${question}`);
+            } catch (error) {
+                showAIResponse("حدث خطأ أثناء اقتراح السؤال. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+        /**
+         * Suggests a new topic for conversation based on the chat history.
+         */
+        async function suggestTopic() {
+            const actualChatMessages = chatHistory.filter(m => m.type === 'sent_chat' || m.type === 'received_chat');
+            if (actualChatMessages.length === 0) {
+                showAIResponse("لا توجد رسائل لاقتراح موضوع بناءً عليها.");
+                return;
+            }
+
+            showLoading();
+            hideAIResponse();
+
+            const fullChatSummary = actualChatMessages.map(m => `${m.sender}: ${m.message}`).join('\n');
+            const prompt = `بناءً على هذه المحادثة، اقترح موضوعًا جديدًا للدردشة. اجعل الاقتراح موجزًا ومثيرًا للاهتمام: \n\n${fullChatSummary}`;
+
+            try {
+                const topic = await callGeminiAPI([{ role: "user", parts: [{ text: prompt }] }]);
+                showAIResponse(`**موضوع مقترح:** ${topic}`);
+            } catch (error) {
+                showAIResponse("حدث خطأ أثناء اقتراح الموضوع. الرجاء المحاولة مرة أخرى.");
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+        // Allow sending messages by pressing Enter key
+        msgInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                send();
+            }
+        });
+
+        // Function to handle initial join and cleanup on leave
+        window.onload = function() {
+            msgInput.focus();
+            const username = usernameInput.value.trim() || 'مجهول';
+            // Announce presence
+            channel.postMessage(JSON.stringify({
+                type: 'participant_join',
+                uuid: myUUID,
+                sender: username,
+                timestamp: new Date().toISOString()
+            }));
+
+            // Request existing participants
+            channel.postMessage(JSON.stringify({
+                type: 'participant_join_request',
+                uuid: myUUID,
+                sender: username,
+                timestamp: new Date().toISOString()
+            }));
+
+            // Handle beforeunload to notify others of departure
+            window.addEventListener('beforeunload', () => {
+                const username = usernameInput.value.trim() || 'مجهول';
+                channel.postMessage(JSON.stringify({
+                    type: 'participant_leave',
+                    uuid: myUUID,
+                    sender: username,
+                    timestamp: new Date().toISOString()
+                }));
+            });
+        };
+
+        // Update username in activeParticipants map when it changes
+        usernameInput.addEventListener('input', () => {
+            const currentUsername = usernameInput.value.trim() || 'مجهول';
+            activeParticipants.set(myUUID, currentUsername);
+            updateParticipantsList();
+        });
+    </script>
+</body>
+</html>
